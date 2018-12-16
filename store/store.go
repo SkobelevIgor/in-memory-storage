@@ -17,6 +17,7 @@ type Record struct {
 var store map[string]Record
 
 func init() {
+
 	store = make(map[string]Record)
 }
 
