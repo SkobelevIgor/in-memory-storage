@@ -1,31 +1,56 @@
 package store
 
 import (
+	"errors"
 	"time"
+
+	uuid "github.com/satori/go.uuid"
 )
 
+// Record is basic struct for object in store
 type Record struct {
-	Id        int64
-	Data      string
-	CreatedAt *time.Time
+	ID        string
+	Data      interface{}
+	CreatedAt time.Time
 }
 
-func GetRecords() (records []Record, err Error) {
+var store map[string]Record
 
+func init() {
+	store = make(map[string]Record)
 }
 
-func GetRecord(id int64) (record Record, err Error) {
-
+// GetRecord return record by ID
+func GetRecord(id string) (record interface{}, err error) {
+	// @TODO process invalid request error
+	record, ok := store[id]
+	a := Record{ID: "'one'"}
+	if ok {
+		return a, nil
+	}
+	return a, errors.New("Record not found")
 }
 
-func SaveRecord() (id int64, err Error) {
-
+// SaveRecord save new record to store
+func SaveRecord(data interface{}) (string, error) {
+	uid, err := uuid.NewV4()
+	if err != nil {
+		return "", err
+	}
+	id := uid.String()
+	record := Record{ID: id, Data: data, CreatedAt: time.Now()}
+	store[id] = record
+	return id, err
 }
 
-func UpdateRecord(id int64, data string) {
+// UpdateRecord update exists record by id
+// @TODO recheck data
+// @TODO recheck REST return on update
+// func ReplaceRecord(id int64, data interface{}) interface{}, error  {
+// 	return
+// }
 
-}
-
-func DeleteRecord(id int64) {
-
-}
+// // DeleteRecord delete record by ID
+// func DeleteRecord(id int64) int64 {
+// 	return id
+// }

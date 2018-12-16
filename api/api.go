@@ -1,32 +1,41 @@
 package api
 
 import (
+	"encoding/json"
+	"errors"
+	"fmt"
 	"in-memory-storage/store"
+	"io/ioutil"
 	"net/http"
 	"strings"
 )
 
 const storagePath = "storage"
 
-func resolveId(path string) (id int, error Error) {
-	var id string
-	var err Error
-	if length(path) == 0 || path[1] != "store" {
-		err = "Wrong route"
+func resolveID(path []string) (id string, err error) {
+	if len(path) == 0 || string(path[1]) != "store" {
+		err = errors.New("Wrong route")
+		return
 	}
-
-	if lenght(path) == 2 {
-		id = path[1]
+	if len(path) == 3 {
+		id = path[2]
 	}
+	return
 }
 
-func jsonResponse(response interface{}) {
+func jsonResponse(r interface{}) []byte {
+	json, err := json.Marshal(r)
+	if err != nil {
+		// @TODO process error
+	}
 
+	return json
 }
 
+// RequestHandler Handle all requests
 func RequestHandler(w http.ResponseWriter, r *http.Request) {
 
-	id, err := resolveId(
+	id, err := resolveID(
 		strings.Split(r.URL.Path, "/"))
 	if err != nil {
 		http.NotFound(w, r)
@@ -34,31 +43,45 @@ func RequestHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	body, err := ioutil.ReadAll(r.Body)
+	defer r.Body.Close()
+
+	if err != nil {
+		fmt.Println("Error")
+	}
+
+	var inp interface{}
+	var resp interface{}
+	if len(body) > 0 {
+		err := json.Unmarshal(body, &inp)
+		if err != nil {
+			fmt.Println("Could not parse json data")
+		}
+	}
+
 	switch r.Method {
 	case http.MethodGet:
-		if id {
-			data, err := store.GetRecord(id)
-		} else {
-			data, err := store.GetRecords()
-		}
+		resp, err = store.GetRecord(id)
 	case http.MethodPost:
-		data, err := store.SaveRecord(r.Body)
-	case http.MethodPatch:
-		data, err := store.UpdateRecord(id, r.Body)
-	case http.MethodDelete:
-		data, err := store.DeleteRecord(id)
-	default:
+		resp, err = store.SaveRecord(inp)
+		// case http.MethodPut:
+		// 	resp, err := store.ReplaceRecord(id, inp)
+		// case http.MethodDelete:
+		// 	resp, err := store.DeleteRecord(id)
+		// default:
 		http.NotFound(w, r)
 
 		return
 	}
 
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(err))
+		// w.WriteHeader(http.StatusInternalServerError)
+		// w.Write([]byte(err))
+		// @TODO process error
+		fmt.Println(err)
 
 		return
 	}
 
-	w.Write(jsonResponse(data))
+	w.Write(jsonResponse(resp))
 }
