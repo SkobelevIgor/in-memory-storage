@@ -64,10 +64,10 @@ func RequestHandler(w http.ResponseWriter, r *http.Request) {
 		resp, err = store.GetRecord(id)
 	case http.MethodPost:
 		resp, err = store.SaveRecord(inp)
-	case http.MethodPut:
-		resp, err := store.ReplaceRecord(id, inp)
-	case http.MethodDelete:
-		resp, err := store.DeleteRecord(id)
+	// case http.MethodPut:
+	// 	resp, err := store.ReplaceRecord(id, inp)
+	// case http.MethodDelete:
+	// 	resp, err := store.DeleteRecord(id)
 	default:
 		http.NotFound(w, r)
 

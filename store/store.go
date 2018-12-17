@@ -2,6 +2,7 @@ package store
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	uuid "github.com/satori/go.uuid"
@@ -10,7 +11,7 @@ import (
 // Record is basic struct for object in store
 type Record struct {
 	ID        string
-	Data      interface{}
+	Data      string
 	CreatedAt time.Time
 }
 
@@ -24,11 +25,10 @@ func init() {
 func GetRecord(id string) (record interface{}, err error) {
 	// @TODO process invalid request error
 	record, ok := store[id]
-	a := Record{ID: "'one'"}
 	if ok {
-		return a, nil
+		return record, nil
 	}
-	return a, errors.New("Record not found")
+	return nil, errors.New("Record not found")
 }
 
 // SaveRecord save new record to store
@@ -39,6 +39,7 @@ func SaveRecord(data interface{}) (string, error) {
 	}
 	id := uid.String()
 	record := Record{ID: id, Data: data, CreatedAt: time.Now()}
+	fmt.Println(record.Data)
 	store[id] = record
 	return id, err
 }
