@@ -2,7 +2,6 @@ package store
 
 import (
 	"encoding/json"
-	"errors"
 	"time"
 
 	uuid "github.com/satori/go.uuid"
@@ -32,35 +31,33 @@ func GetRecord(id string) json.RawMessage {
 }
 
 // SaveRecord save new record to store
-func SaveRecord(data json.RawMessage) (string, error) {
+func SaveRecord(data json.RawMessage) (id string) {
 	uid, err := uuid.NewV4()
 	if err != nil {
-		return "", err
+		return
 	}
-	id := uid.String()
+	id = uid.String()
 	record := Record{ID: id, Data: data, CreatedAt: time.Now()}
 	store[id] = record
-	return id, err
+	return
 }
 
 // ReplaceRecord replace exists record by id
-func ReplaceRecord(id string, data json.RawMessage) (err error) {
+func ReplaceRecord(id string, data json.RawMessage) (ok bool) {
 	rec, ok := store[id]
 	if ok {
 		rec.Data = data
 		store[id] = rec
-	} else {
-		err = errors.New("Unable to find record")
 	}
 
 	return
 }
 
 // DeleteRecord delete record by ID
-func DeleteRecord(id string) (err error) {
+func DeleteRecord(id string) bool {
 	_, ok := store[id]
 	if ok {
 		delete(store, id)
 	}
-	return
+	return ok
 }

@@ -8,6 +8,7 @@
             "name": "Launch",
             "type": "go",
             "request": "launch",
+            "showLog": true,
             "mode": "debug",
             "program": "${workspaceRoot}",
             "env": {},
