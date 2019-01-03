@@ -6,22 +6,32 @@ import (
 	"in-memory-storage/store"
 	"io/ioutil"
 	"net/http"
+	"runtime"
 	"strings"
 )
 
-const storagePath = "storage"
+const storageResource = "storage"
+const infoResource = "status"
 
 type newRecordResponse struct {
 	ID string `json:"id"`
 }
 
 func resolveID(r *http.Request) (id string) {
-	path := strings.Split(r.URL.Path, "/")
-	if len(path) == 0 || string(path[1]) != "store" {
+	p := strings.Split(r.URL.Path, "/")
+	if len(p) == 0 {
 		return
 	}
-	if len(path) == 3 {
-		id = path[2]
+	if len(p) == 3 {
+		id = p[2]
+	}
+	return
+}
+
+func resolveResource(r *http.Request) (path string) {
+	p := strings.Split(r.URL.Path, "/")
+	if len(p) > 0 {
+		path = p[1]
 	}
 	return
 }
@@ -67,19 +77,29 @@ func RequestHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleGet(w http.ResponseWriter, r *http.Request) {
-	id := resolveID(r)
-	if id == "" {
-		http.NotFound(w, r)
-		return
-	}
+	path := resolveResource(r)
+	if path == storageResource {
+		id := resolveID(r)
+		rec := store.GetRecord(id)
+		if rec != nil {
+			fmt.Fprint(w, jsonResponse(rec))
+		} else {
+			http.NotFound(w, r)
+		}
 
-	rec := store.GetRecord(id)
-	if rec == nil {
-		http.NotFound(w, r)
-		return
-	}
+	} else if path == infoResource {
+		var mem runtime.MemStats
+		runtime.ReadMemStats(&mem)
 
-	fmt.Fprint(w, jsonResponse(rec))
+		info := map[string]interface{}{
+			"itemsCount": store.GetItemsCount(),
+			"mem":        mem}
+		j, _ := json.Marshal(info)
+		fmt.Fprint(w, string(j))
+	} else {
+		http.NotFound(w, r)
+	}
+	return
 }
 
 func handlePost(w http.ResponseWriter, r *http.Request) {
@@ -89,7 +109,7 @@ func handlePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	id := store.SaveRecord(js)
-	if id != "" {
+	if id == "" {
 		http.Error(w, "", http.StatusBadRequest)
 		return
 	}

@@ -20,6 +20,12 @@ func init() {
 	store = make(map[string]Record)
 }
 
+// GetItemsCount returns total count of elements
+func GetItemsCount() (c int) {
+	c = len(store)
+	return
+}
+
 // GetRecord return record by ID
 func GetRecord(id string) json.RawMessage {
 	// @TODO process invalid request error
