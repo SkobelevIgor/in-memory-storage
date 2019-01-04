@@ -48,7 +48,8 @@
                 <stringProp name="Argument.value">{&#xd;
 	&quot;itemName&quot;: &quot;${__RandomString(7,abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ)}&quot;,&#xd;
 	&quot;time&quot;: &quot;${__time(Y-MM-DD H:m:s)}&quot;,&#xd;
-	&quot;counter&quot;: ${__threadNum()}&#xd;
+	&quot;threadNum&quot;: ${__threadNum()},&#xd;
+	&quot;inc&quot;: ${__counter(false)}&#xd;
 }</stringProp>
                 <stringProp name="Argument.metadata">=</stringProp>
               </elementProp>
