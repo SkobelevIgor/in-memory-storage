@@ -3,3 +3,4 @@ in-memory-storage
 debug
 jmeter.log
 result.csv
+.store.gob

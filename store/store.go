@@ -8,6 +8,16 @@ import (
 	uuid "github.com/satori/go.uuid"
 )
 
+const backupFile = ".store.gob"
+
+// Config store config
+type Config struct {
+	BackupTimeSecs int
+	BackupOps      int
+	GracefulBackup bool
+	SkipBackupLoad bool
+}
+
 // Record item in store
 type Record struct {
 	ID        string
@@ -22,8 +32,34 @@ type mainStore struct {
 
 var store *mainStore
 
-func init() {
+// InitStore initialize store, load from backup etc
+func InitStore(cfg Config) (err error) {
 	store = &mainStore{s: make(map[string]Record)}
+	if cfg.BackupTimeSecs > 0 {
+		err = runBackupByTimer(cfg.BackupTimeSecs)
+	}
+	if err == nil && cfg.BackupOps > 0 {
+		err = runBackupByOpsCounter(cfg.BackupOps)
+	}
+	if err == nil && cfg.GracefulBackup == true {
+		// add panic processing
+	}
+	if err == nil && cfg.SkipBackupLoad == false {
+		err = loadStoreFromBackup()
+	}
+	return err
+}
+
+func runBackupByTimer(secsInterval int) error {
+	return nil
+}
+
+func runBackupByOpsCounter(opsCount int) error {
+	return nil
+}
+
+func loadStoreFromBackup() error {
+	return nil
 }
 
 // GetItemsCount returns total count of elements
