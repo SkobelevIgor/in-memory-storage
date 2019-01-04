@@ -1,3 +1,5 @@
 .vscode
 in-memory-storage
 debug
+jmeter.log
+result.csv

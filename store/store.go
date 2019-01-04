@@ -2,6 +2,7 @@ package store
 
 import (
 	"encoding/json"
+	"sync"
 	"time"
 
 	uuid "github.com/satori/go.uuid"
@@ -14,22 +15,30 @@ type Record struct {
 	CreatedAt time.Time
 }
 
-var store map[string]Record
+type mainStore struct {
+	mx sync.RWMutex
+	s  map[string]Record
+}
+
+var store *mainStore
 
 func init() {
-	store = make(map[string]Record)
+	store = &mainStore{s: make(map[string]Record)}
 }
 
 // GetItemsCount returns total count of elements
 func GetItemsCount() (c int) {
-	c = len(store)
+	store.mx.RLock()
+	defer store.mx.RUnlock()
+	c = len(store.s)
 	return
 }
 
 // GetRecord return record by ID
 func GetRecord(id string) json.RawMessage {
-	// @TODO process invalid request error
-	rec, ok := store[id]
+	store.mx.RLock()
+	defer store.mx.RUnlock()
+	rec, ok := store.s[id]
 	if ok {
 		return rec.Data
 	}
@@ -44,26 +53,31 @@ func SaveRecord(data json.RawMessage) (id string) {
 	}
 	id = uid.String()
 	record := Record{ID: id, Data: data, CreatedAt: time.Now()}
-	store[id] = record
+	store.mx.Lock()
+	defer store.mx.Unlock()
+	store.s[id] = record
 	return
 }
 
 // ReplaceRecord replace exists record by id
 func ReplaceRecord(id string, data json.RawMessage) (ok bool) {
-	rec, ok := store[id]
+	store.mx.Lock()
+	defer store.mx.Unlock()
+	rec, ok := store.s[id]
 	if ok {
 		rec.Data = data
-		store[id] = rec
+		store.s[id] = rec
 	}
-
 	return
 }
 
 // DeleteRecord delete record by ID
 func DeleteRecord(id string) bool {
-	_, ok := store[id]
+	store.mx.Lock()
+	defer store.mx.Unlock()
+	_, ok := store.s[id]
 	if ok {
-		delete(store, id)
+		delete(store.s, id)
 	}
 	return ok
 }
