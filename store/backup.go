@@ -40,19 +40,26 @@ func runBackupByOpsCounter() {
 
 func loadStoreFromBackup() (err error) {
 	if _, err := os.Stat(backupFile); !os.IsNotExist(err) {
+		fmt.Println("Loading store from backup")
 		f, err := os.Open(backupFile)
 		if err == nil {
 			decoder := gob.NewDecoder(f)
 			recs := map[string]Record{}
 			err = decoder.Decode(&recs)
 			store.records = recs
+		} else {
+			fmt.Println("Loading store from backup faled")
 		}
+		fmt.Println("Loading store finished")
 	}
 	return err
 }
 
 func backupStore() (err error) {
-	if store.backupInProcess == false {
+	store.mx.RLock()
+	k := store.backupInProcess
+	store.mx.RUnlock()
+	if k == false {
 		updateBackupStateKey(true)
 	} else {
 		return
@@ -62,7 +69,9 @@ func backupStore() (err error) {
 	if err == nil {
 		defer f.Close()
 		enc := gob.NewEncoder(f)
+		store.mx.RLock()
 		enc.Encode(store.records)
+		store.mx.RUnlock()
 		err = os.Rename(backupFileTemp, backupFile)
 		if err != nil {
 			fmt.Printf("Unable to save %s file", backupFile)
