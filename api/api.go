@@ -10,8 +10,10 @@ import (
 	"strings"
 )
 
-const storageResource = "storage"
-const infoResource = "status"
+const (
+	storageResource = "storage"
+	infoResource    = "status"
+)
 
 type newRecordResponse struct {
 	ID string `json:"id"`
@@ -52,7 +54,7 @@ func getBodyJSON(r *http.Request) (inp json.RawMessage) {
 func jsonResponse(r interface{}) string {
 	json, err := json.Marshal(r)
 	if err != nil {
-		// @TODO process error
+		panic("Unable to parse JSON")
 	}
 	return string(json)
 }
@@ -60,6 +62,12 @@ func jsonResponse(r interface{}) string {
 // RequestHandler Handle all requests
 func RequestHandler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
+	defer func() {
+		if p := recover(); p != nil {
+			err := fmt.Errorf("Internal error: %v", p)
+			http.Error(w, err.Error(), http.StatusBadRequest)
+		}
+	}()
 
 	switch r.Method {
 	case http.MethodGet:
