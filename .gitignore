@@ -4,3 +4,4 @@ debug
 jmeter.log
 result.csv
 .store.gob
+perfomance.result.csv
